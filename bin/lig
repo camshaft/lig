@@ -16,7 +16,7 @@ var parseAddress = require('../lib/util').parseAddress;
 
 program
   .version(require('../package').version)
-  .option('-a, --address <address>', 'address of log server', 'tcp://0.0.0.0:91899');
+  .option('-a, --address <address>', 'address of log server', 'tcp://0.0.0.0:91988');
 
 /**
  * parse argv

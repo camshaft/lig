@@ -55,6 +55,7 @@ pull.on('message', function(msg) {
 
 pub.on('connect', function(client) {
   buf.forEach(function(m) {
-    client.send(m);
+    var msg = pub.pack(m);
+    if (client.writable) client.write(msg);
   });
 });
