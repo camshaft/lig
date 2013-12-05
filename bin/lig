@@ -1,0 +1,114 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var spawn = require('win-fork');
+var axon = require('axon');
+var sock = axon.socket('push');
+
+/**
+ * usage
+ */
+
+program
+  .version(require('../package').version)
+  .option('-a, --address <address>', 'address of log server', 'tcp://0.0.0.0:91899');
+
+/**
+ * parse argv
+ */
+
+program.parse(process.argv);
+
+/**
+ * command
+ */
+
+var cmd = program.args[0];
+
+/**
+ * display help
+ */
+
+if (!cmd) {
+  process.stdout.write(program.helpInformation());
+  program.emit('--help');
+  process.exit();
+}
+
+/**
+ * parse the server address
+ */
+
+var val = parseInt(program.address, 10);
+program.address = Number.isNaN(val) ? program.address : val;
+
+/**
+ * extract the arguments
+ */
+
+var args;
+
+for (var i = 2; i < process.argv.length; i += 2) {
+  var item = process.argv[i];
+  if (item.indexOf('-') === 0) continue;
+  args = process.argv.slice(i + 1);
+  break;
+}
+
+/**
+ * define our axon codec
+ */
+
+axon.codec.define('json', {
+  encode: JSON.stringify,
+  decode: JSON.parse
+});
+sock.format('json');
+
+/**
+ * connect to our server
+ */
+
+sock.connect(program.address);
+
+/**
+ * spawn
+ */
+
+var proc = spawn(cmd, args);
+
+proc.stdout.on('data', function(data) {
+  process.stdout.write(data);
+  // TODO send on to server
+  sock.send({c: cmd, a: args, t: 'out', d: process.cwd(), m: data});
+});
+
+proc.stderr.on('data', function(data) {
+  process.stderr.write(data);
+  // TODO send on to server
+  sock.send({c: cmd, a: args, t: 'err', d: process.cwd(), m: data});
+});
+
+proc.on('error', function(err) {
+  if (err.code !== 'ENOENT') throw err;
+  console.error("cannot find command:", program.args.join(' '));
+});
+
+proc.on('close', function(code){
+  sock.send({c: cmd, a: args, t: 'disconnect', d: process.cwd()});
+  process.exit(code);
+});
+
+process.on('SIGINT', function() {
+  proc.kill('SIGINT');
+  process.exit(0);
+});
+
+process.on('SIGTERM', function() {
+  proc.kill('SIGTERM');
+  process.exit(0);
+});

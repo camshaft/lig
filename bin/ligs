@@ -1,0 +1,54 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var spawn = require('win-fork');
+var axon = require('axon');
+var sock = axon.socket('pull');
+var CBuffer = require('CBuffer');
+var readdir = require('fs').readdir;
+
+/**
+ * usage
+ */
+
+program
+  .version(require('../package').version)
+  .option('-s, --size <size>', 'size of the buffer', '5000')
+  .option('-a, --address <address>', 'address of log server', 'tcp://0.0.0.0:91899');
+
+/**
+ * parse argv
+ */
+
+program.parse(process.argv);
+
+var buf = new CBuffer(parseInt(program.size, 10));
+
+/**
+ * define our axon codec
+ */
+
+axon.codec.define('json', {
+  encode: JSON.stringify,
+  decode: JSON.parse
+});
+sock.format('json');
+
+/**
+ * connect to our server
+ */
+
+sock.bind(program.address);
+
+sock.on('message', function(msg) {
+  msg.m = new Buffer(msg.m);
+  buf.push(msg);
+  process.stdout.write('\u001b[2J');
+  buf.forEach(function(m) {
+    process.stdout.write(m.m);
+  });
+});

@@ -1,0 +1,21 @@
+{
+  "name": "lig",
+  "version": "0.1.0",
+  "description": "Little log aggregator",
+  "main": "lib/index.js",
+  "bin": {
+    "lig": "bin/lig",
+    "ligs": "bin/ligs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Cameron Bytheway <cameron@pivotapp.io>",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "~2.1.0",
+    "win-fork": "~1.1.1",
+    "axon": "~1.0.0",
+    "CBuffer": "git+https://github.com/trevnorris/cbuffer.git"
+  }
+}
