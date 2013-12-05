@@ -10,7 +10,8 @@ var axon = require('axon');
 var pull = axon.socket('pull');
 var pub = axon.socket('pub');
 var CBuffer = require('CBuffer');
-var parseAddress = require('../lib/util').parseAddress;
+var util = require('../lib/util');
+var parseAddress = util.parseAddress;
 
 /**
  * usage
@@ -18,7 +19,7 @@ var parseAddress = require('../lib/util').parseAddress;
 
 program
   .version(require('../package').version)
-  .option('-s, --size <size>', 'size of the buffer', '5000')
+  .option('-s, --size <size>', 'size of the buffer', '10000')
   .option('-a, --address <address>', 'address of log server', 'tcp://0.0.0.0:91988')
   .option('-p, --pubsub <address>', 'address of pubsub server', 'tcp://0.0.0.0:10588');
 
@@ -34,10 +35,7 @@ var buf = new CBuffer(parseInt(program.size, 10));
  * define our axon codec
  */
 
-axon.codec.define('json', {
-  encode: JSON.stringify,
-  decode: JSON.parse
-});
+util.init();
 pull.format('json');
 pub.format('json');
 

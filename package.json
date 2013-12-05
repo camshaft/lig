@@ -2,7 +2,7 @@
   "name": "lig",
   "version": "0.1.0",
   "description": "Little log aggregator",
-  "main": "lib/index.js",
+  "main": "index.js",
   "bin": {
     "lig": "bin/lig",
     "ligs": "bin/ligs"

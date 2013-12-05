@@ -8,7 +8,8 @@ var program = require('commander');
 var spawn = require('win-fork');
 var axon = require('axon');
 var sock = axon.socket('push');
-var parseAddress = require('../lib/util').parseAddress;
+var util = require('../lib/util');
+var parseAddress = util.parseAddress;
 
 /**
  * usage
@@ -57,10 +58,7 @@ for (var i = 2; i < process.argv.length; i += 2) {
  * define our axon codec
  */
 
-axon.codec.define('json', {
-  encode: JSON.stringify,
-  decode: JSON.parse
-});
+util.init();
 sock.format('json');
 
 /**
@@ -77,12 +75,12 @@ var proc = spawn(cmd, args);
 
 proc.stdout.on('data', function(data) {
   process.stdout.write(data);
-  sock.send({c: cmd, a: args, t: 'out', d: process.cwd(), m: data});
+  sock.send({c: cmd, a: args, t: 1, d: process.cwd(), m: data});
 });
 
 proc.stderr.on('data', function(data) {
   process.stderr.write(data);
-  sock.send({c: cmd, a: args, t: 'err', d: process.cwd(), m: data});
+  sock.send({c: cmd, a: args, t: 0, d: process.cwd(), m: data});
 });
 
 proc.on('error', function(err) {
@@ -91,7 +89,7 @@ proc.on('error', function(err) {
 });
 
 proc.on('close', function(code){
-  sock.send({c: cmd, a: args, t: 'disconnect', d: process.cwd()});
+  sock.send({c: cmd, a: args, e: 'd', d: process.cwd()});
   process.exit(code);
 });
 
