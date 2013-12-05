@@ -7,9 +7,10 @@
 var program = require('commander');
 var spawn = require('win-fork');
 var axon = require('axon');
-var sock = axon.socket('pull');
+var pull = axon.socket('pull');
+var pub = axon.socket('pub');
 var CBuffer = require('CBuffer');
-var readdir = require('fs').readdir;
+var parseAddress = require('../lib/util').parseAddress;
 
 /**
  * usage
@@ -18,7 +19,8 @@ var readdir = require('fs').readdir;
 program
   .version(require('../package').version)
   .option('-s, --size <size>', 'size of the buffer', '5000')
-  .option('-a, --address <address>', 'address of log server', 'tcp://0.0.0.0:91899');
+  .option('-a, --address <address>', 'address of log server', 'tcp://0.0.0.0:91988')
+  .option('-p, --pubsub <address>', 'address of pubsub server', 'tcp://0.0.0.0:10588');
 
 /**
  * parse argv
@@ -36,19 +38,23 @@ axon.codec.define('json', {
   encode: JSON.stringify,
   decode: JSON.parse
 });
-sock.format('json');
+pull.format('json');
+pub.format('json');
 
 /**
- * connect to our server
+ * start up our servers
  */
 
-sock.bind(program.address);
+pull.bind(parseAddress(program.address));
+pub.bind(parseAddress(program.pubsub));
 
-sock.on('message', function(msg) {
-  msg.m = new Buffer(msg.m);
+pull.on('message', function(msg) {
   buf.push(msg);
-  process.stdout.write('\u001b[2J');
+  pub.send(msg);
+});
+
+pub.on('connect', function(client) {
   buf.forEach(function(m) {
-    process.stdout.write(m.m);
+    client.send(m);
   });
 });

@@ -8,6 +8,7 @@ var program = require('commander');
 var spawn = require('win-fork');
 var axon = require('axon');
 var sock = axon.socket('push');
+var parseAddress = require('../lib/util').parseAddress;
 
 /**
  * usage
@@ -40,13 +41,6 @@ if (!cmd) {
 }
 
 /**
- * parse the server address
- */
-
-var val = parseInt(program.address, 10);
-program.address = Number.isNaN(val) ? program.address : val;
-
-/**
  * extract the arguments
  */
 
@@ -73,7 +67,7 @@ sock.format('json');
  * connect to our server
  */
 
-sock.connect(program.address);
+sock.connect(parseAddress(program.address));
 
 /**
  * spawn
@@ -83,19 +77,17 @@ var proc = spawn(cmd, args);
 
 proc.stdout.on('data', function(data) {
   process.stdout.write(data);
-  // TODO send on to server
   sock.send({c: cmd, a: args, t: 'out', d: process.cwd(), m: data});
 });
 
 proc.stderr.on('data', function(data) {
   process.stderr.write(data);
-  // TODO send on to server
   sock.send({c: cmd, a: args, t: 'err', d: process.cwd(), m: data});
 });
 
 proc.on('error', function(err) {
   if (err.code !== 'ENOENT') throw err;
-  console.error("cannot find command:", program.args.join(' '));
+  console.error('cannot find command:', program.args.join(' '));
 });
 
 proc.on('close', function(code){
