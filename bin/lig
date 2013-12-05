@@ -83,6 +83,8 @@ proc.stderr.on('data', function(data) {
   sock.send({c: cmd, a: args, t: 0, d: process.cwd(), m: data});
 });
 
+process.stdin.pipe(proc.stdin);
+
 proc.on('error', function(err) {
   if (err.code !== 'ENOENT') throw err;
   console.error('cannot find command:', program.args.join(' '));
